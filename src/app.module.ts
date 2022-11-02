@@ -5,11 +5,12 @@ import { configValidationSchema } from './config.schema';
 import { MoviesModule } from './movies/movies.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-import { LoggerMiddleware } from './middlewares/logger.middleware';
 import { CineplexsModule } from './cineplexs/cineplexs.module';
 import { CinemasModule } from './cinemas/cinemas.module';
 import { ShowtimesModule } from './showtimes/showtimes.module';
 import { SeatTicketsModule } from './seat-tickets/seat-tickets.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -39,6 +40,9 @@ import { SeatTicketsModule } from './seat-tickets/seat-tickets.module';
         };
       },
     }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+    }),
     MoviesModule,
     UsersModule,
     AuthModule,
@@ -49,7 +53,5 @@ import { SeatTicketsModule } from './seat-tickets/seat-tickets.module';
   ],
 })
 export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes('movies');
-  }
+  configure(consumer: MiddlewareConsumer) {}
 }

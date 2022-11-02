@@ -3,6 +3,8 @@ import {
   ForbiddenException,
   Get,
   Logger,
+  Param,
+  ParseIntPipe,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -36,64 +38,9 @@ export class UsersController {
     return this.usersService.getAllUsers(filterDto);
   }
 
-  //   @Get('/:id')
-  //   getTaskById(@Param('id', ParseIntPipe) id: number): Promise<Movie> {
-  //     return this.usersService.getMovieById(id);
-  //   }
-
-  //   @Post()
-  //   @UseGuards(AuthGuard())
-  //   createMovie(
-  //     @Body() createMovieDto: CreateMovieDto,
-  //     @GetUser() user: User,
-  //   ): Promise<Movie> {
-  //     const allowedRole: Array<UserRole> = [UserRole.ADMIN, UserRole.SUPER_ADMIN];
-
-  //     if (!allowedRole.includes(user.role)) {
-  //       throw new ForbiddenException();
-  //     }
-
-  //     this.logger.verbose(
-  //       `User "${user.username}" creating a new movie. Data: ${JSON.stringify(
-  //         createMovieDto,
-  //       )}`,
-  //     );
-
-  //     return this.UsersService.createMovie(createMovieDto);
-  //   }
-
-  //   @Delete('/:id')
-  //   @UseGuards(AuthGuard())
-  //   deleteMovie(
-  //     @Param('id', ParseIntPipe) id: number,
-  //     @GetUser() user: User,
-  //   ): Promise<void> {
-  //     const allowedRole: Array<UserRole> = [UserRole.ADMIN, UserRole.SUPER_ADMIN];
-
-  //     if (!allowedRole.includes(user.role)) {
-  //       throw new ForbiddenException();
-  //     }
-
-  //     this.logger.verbose(
-  //       `User "${user.username}" deleting a movie with ID ${id}.`,
-  //     );
-
-  //     return this.UsersService.deleteMovie(id);
-  //   }
-
-  //   @Patch('/:id')
-  //   @UseGuards(AuthGuard())
-  //   updateMovie(
-  //     @Param('id', ParseIntPipe) id: number,
-  //     @Body() updateMovieDto: UpdateMovieDto,
-  //     @GetUser() user: User,
-  //   ): Promise<Movie> {
-  //     const allowedRole: Array<UserRole> = [UserRole.ADMIN, UserRole.SUPER_ADMIN];
-
-  //     if (!allowedRole.includes(user.role)) {
-  //       throw new ForbiddenException();
-  //     }
-
-  //     return this.UsersService.updateMovie(id, updateMovieDto);
-  //   }
+  @Get('/user-profile')
+  @UseGuards(AuthGuard())
+  getUser(@GetUser() user: User): Promise<User> {
+    return this.usersService.getUser(user);
+  }
 }

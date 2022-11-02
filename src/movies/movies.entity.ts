@@ -50,7 +50,7 @@ export class Movie {
   updateDate;
 
   @OneToMany((_type) => Showtime, (showtime) => showtime.movie, {
-    eager: true,
+    eager: false,
   })
   showtimes: Showtime[];
 

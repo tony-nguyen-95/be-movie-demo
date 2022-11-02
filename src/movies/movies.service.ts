@@ -1,37 +1,73 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { Cinema } from 'src/cinemas/cinema.entity';
+import { CinemaRepository } from 'src/cinemas/cinema.repository';
+import { Showtime } from 'src/showtimes/showtime.entity';
+import { In } from 'typeorm';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { GetMoviesFilterDto } from './dto/get-movies-filter.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
-import { MovieCategory } from './movie-category.enum';
 import { MovieRepository } from './movie.repository';
 import { Movie } from './movies.entity';
 
 @Injectable()
 export class MoviesService {
-  constructor(private movieRepository: MovieRepository) {}
-
-  async getMoviesByIds(ids: Array<number>) {
-    return await this.movieRepository.find({ where: { id: In(ids) } });
-  }
+  constructor(
+    private movieRepository: MovieRepository,
+    private cinemaRepository: CinemaRepository,
+  ) {}
 
   async getMovies(filterDto: GetMoviesFilterDto): Promise<Array<Movie>> {
+    const { search } = filterDto;
+
     const query = this.movieRepository.createQueryBuilder('movie');
 
-    const movies = await query.getMany();
+    if (search) {
+      query.andWhere(
+        '(LOWER(movie.title) LIKE LOWER(:search) OR LOWER(movie.description) LIKE LOWER(:search))',
+        { search: `%${search}%` },
+      );
+    }
+
+    const movies = await await query.getMany();
 
     return movies;
   }
 
   async getMovieById(id: number): Promise<Movie> {
-    const found = await this.movieRepository.findOne({ where: { id } });
+    const movie = this.movieRepository.findOne({ where: { id } });
 
-    if (!found) {
-      throw new NotFoundException(`Movie with ID "${id}" not found`);
+    return movie;
+  }
+
+  async getMoviesByIds(ids: Array<number>) {
+    return await this.movieRepository.find({
+      where: { id: In(ids) },
+    });
+  }
+
+  async getMoviesByIdsIncludeShowtime(ids: Array<number>) {
+    return await this.movieRepository.find({
+      where: { id: In(ids) },
+      relations: { showtimes: true },
+    });
+  }
+
+  async getCinemasFromMovieId(movieId: number): Promise<Array<Cinema>> {
+    const queryArrayCinemaIds = await this.movieRepository.query(`
+    SELECT cinemaId
+    FROM movie
+    INNER JOIN movie_cinemas_cinema
+    ON movie.id = movie_cinemas_cinema.movieId where movie_cinemas_cinema.movieId like "%${movieId}%";`);
+
+    if ((await queryArrayCinemaIds.length) === 0) {
+      throw new NotFoundException(`Movie with ID "${movieId}" not found`);
     }
 
-    return found;
+    const cinemas = await this.cinemaRepository.find({
+      where: { id: In(queryArrayCinemaIds.map((item) => item.cinemaId)) },
+    });
+
+    return cinemas;
   }
 
   async createMovie(createMovieDto: CreateMovieDto): Promise<Movie> {

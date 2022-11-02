@@ -16,11 +16,8 @@ export class Showtime {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'date' })
+  @Column()
   showDate: string;
-
-  @Column({ type: 'date' })
-  showTime: string;
 
   @CreateDateColumn()
   updateDate;
@@ -34,11 +31,10 @@ export class Showtime {
   @ManyToOne((_type) => Movie, (movie) => movie.showtimes, {
     eager: false,
   })
-  @Exclude({ toPlainOnly: true })
   movie: number;
 
   @OneToMany((_type) => SeatTicket, (seatTicket) => seatTicket.showtime, {
-    eager: true,
+    eager: false,
   })
   seats: SeatTicket[];
 }

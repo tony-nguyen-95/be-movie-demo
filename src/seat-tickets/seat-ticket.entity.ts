@@ -20,11 +20,10 @@ export class SeatTicket {
     eager: false,
   })
   @Exclude({ toPlainOnly: true })
-  showtime: string;
+  showtime: number;
 
   @ManyToOne((_type) => User, (user) => user.seats, {
     eager: false,
   })
-  @Exclude({ toPlainOnly: true })
   user: string;
 }

@@ -14,7 +14,6 @@ export class CineplexsService {
   async getAllCineplexs(): Promise<Array<Cineplex>> {
     const query = this.cineplexRepository.createQueryBuilder('cineplex');
 
-    // const cineplexs = await query.getMany();
     const cineplexs = this.cineplexRepository.find({
       relations: {
         cinemas: true,

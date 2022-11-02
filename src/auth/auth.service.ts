@@ -38,7 +38,6 @@ export class AuthService {
       await this.usersRepository.save(user);
     } catch (error) {
       if (error.code === '23505') {
-        // duplicate username
         throw new ConflictException('Username already exists');
       } else {
         throw new InternalServerErrorException();
@@ -70,11 +69,4 @@ export class AuthService {
       throw new UnauthorizedException('Please check your login credentials');
     }
   }
-
-  //   authorize(arrRole: Array<UserRole>, user: User) {
-  //     const isAllowed = arrRole.findIndex((role) => user.role === role) > -1;
-  //     if (!isAllowed) {
-  //       throw new UnauthorizedException();
-  //     }
-  //   }
 }

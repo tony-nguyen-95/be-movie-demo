@@ -33,7 +33,7 @@ export class Cinema {
   cineplex: string;
 
   @OneToMany((_type) => Showtime, (showtime) => showtime.cinema, {
-    eager: true,
+    eager: false,
   })
   showtimes: Showtime[];
 

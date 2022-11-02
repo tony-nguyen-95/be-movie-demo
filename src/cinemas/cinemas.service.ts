@@ -1,23 +1,61 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Movie } from 'src/movies/movies.entity';
-import { In, Repository } from 'typeorm';
+import { MoviesService } from 'src/movies/movies.service';
+import { In } from 'typeorm';
 import { Cinema } from './cinema.entity';
+import { CinemaRepository } from './cinema.repository';
 import { CreateCinemaDto } from './dto/create-cinema.dto';
 
 @Injectable()
 export class CinemasService {
   constructor(
-    @InjectRepository(Cinema) private cinemaRepository: Repository<Cinema>, // @InjectRepository(Movie) // private movieRepository: Repository<Movie>,
+    private cinemaRepository: CinemaRepository,
+    private moviesService: MoviesService,
   ) {}
 
-  async getCinemas(): // filterDto: GetCinemasFilterDto
-  Promise<Array<Cinema>> {
-    const query = this.cinemaRepository.createQueryBuilder('Cinema');
+  async getAllCinemas(): Promise<Array<Cinema>> {
+    const query = this.cinemaRepository.createQueryBuilder('cinema');
+    const cinemas = query.getMany();
 
-    const Cinemas = await query.getMany();
+    return cinemas;
+  }
 
-    return Cinemas;
+  async getMoviesFromCinemaId(cinemaId: string): Promise<Array<Movie>> {
+    const queryArrayMovieIds = await this.cinemaRepository.query(`
+    SELECT movieId
+    FROM cinema
+    INNER JOIN movie_cinemas_cinema
+    ON cinema.id = movie_cinemas_cinema.cinemaId where movie_cinemas_cinema.cinemaId like "%${cinemaId}%";`);
+
+    if ((await queryArrayMovieIds.length) === 0) {
+      throw new NotFoundException(`Cinema with ID "${cinemaId}" not found`);
+    }
+
+    const movies = await this.moviesService.getMoviesByIds(
+      queryArrayMovieIds.map((item) => item.movieId),
+    );
+
+    return movies;
+  }
+
+  async getMoviesFromCinemaIdIncludeShowtime(
+    cinemaId: string,
+  ): Promise<Array<Movie>> {
+    const queryArrayMovieIds = await this.cinemaRepository.query(`
+    SELECT movieId
+    FROM cinema
+    INNER JOIN movie_cinemas_cinema
+    ON cinema.id = movie_cinemas_cinema.cinemaId where movie_cinemas_cinema.cinemaId like "%${cinemaId}%";`);
+
+    if ((await queryArrayMovieIds.length) === 0) {
+      throw new NotFoundException(`Cinema with ID "${cinemaId}" not found`);
+    }
+
+    const movies = await this.moviesService.getMoviesByIdsIncludeShowtime(
+      queryArrayMovieIds.map((item) => item.movieId),
+    );
+
+    return movies;
   }
 
   async getCinemaById(id: string): Promise<Cinema> {
@@ -36,16 +74,16 @@ export class CinemasService {
   ): Promise<Cinema> {
     const { cinemaName, address, cineplex } = createCinemaDto;
 
-    const Cinema = await this.cinemaRepository.create({
+    const cinema = await this.cinemaRepository.create({
       cinemaName,
       address,
       cineplex,
       movies,
     });
 
-    await this.cinemaRepository.save(Cinema);
+    await this.cinemaRepository.save(cinema);
 
-    return Cinema;
+    return cinema;
   }
 
   async deleteCinema(id: string): Promise<void> {
@@ -54,5 +92,23 @@ export class CinemasService {
     if (result.affected === 0) {
       throw new NotFoundException(`Cinema with ID "${id}" not found`);
     }
+  }
+
+  async updateCinemaWithMovies(
+    id: string,
+    movieIds: Array<number>,
+  ): Promise<Cinema> {
+    let cinema = await this.getCinemaById(id);
+
+    const movies = await this.moviesService.getMoviesByIds(movieIds);
+
+    cinema = {
+      ...cinema,
+      movies: movies,
+    };
+
+    await this.cinemaRepository.save(cinema);
+
+    return cinema;
   }
 }

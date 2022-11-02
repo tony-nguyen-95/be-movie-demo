@@ -15,7 +15,14 @@ export class UsersService {
     const query = this.userRepository.createQueryBuilder('user');
 
     const users = await query.getMany();
-
     return users;
+  }
+
+  async getUser(user: User): Promise<User> {
+    delete user.password;
+
+    delete user.updateDate;
+
+    return user;
   }
 }
