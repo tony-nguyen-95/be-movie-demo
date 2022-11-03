@@ -48,13 +48,8 @@ export class CinemasController {
   }
 
   @Get()
-  @UseGuards(AuthGuard())
-  async getAllCinemas(@GetUser() user: User) {
+  async getAllCinemas() {
     try {
-      if (!this.allowedRole.includes(user.role)) {
-        throw new ForbiddenException();
-      }
-
       return this.cinemasService.getAllCinemas();
     } catch {
       throw new InternalServerErrorException();
