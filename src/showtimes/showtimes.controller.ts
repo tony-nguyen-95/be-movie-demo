@@ -1,8 +1,8 @@
 import {
-  Body,
   Controller,
   ForbiddenException,
   Get,
+  InternalServerErrorException,
   Param,
   ParseIntPipe,
   UseGuards,
@@ -22,16 +22,24 @@ export class ShowtimesController {
   @Get('/all')
   @UseGuards(AuthGuard())
   async getShowtimes(@GetUser() user: User) {
-    if (!this.allowedRole.includes(user.role)) {
-      throw new ForbiddenException();
+    try {
+      if (!this.allowedRole.includes(user.role)) {
+        throw new ForbiddenException();
+      }
+      return this.showtimeService.getShowtimes();
+    } catch {
+      throw new InternalServerErrorException();
     }
-    return this.showtimeService.getShowtimes();
   }
 
   @Get('/:id')
   @UseGuards(AuthGuard())
   async getShowtimeById(@Param('id') id: number) {
-    return this.showtimeService.getShowtimeById(id);
+    try {
+      return this.showtimeService.getShowtimeById(id);
+    } catch {
+      throw new InternalServerErrorException();
+    }
   }
 
   @Get('/:movieId/:cinemaId/list')
@@ -39,9 +47,13 @@ export class ShowtimesController {
     @Param('movieId', ParseIntPipe) movieId: number,
     @Param('cinemaId') cinemaId: string,
   ) {
-    return this.showtimeService.getShowtimeFromMovieAndCinema(
-      movieId,
-      cinemaId,
-    );
+    try {
+      return this.showtimeService.getShowtimeFromMovieAndCinema(
+        movieId,
+        cinemaId,
+      );
+    } catch {
+      throw new InternalServerErrorException();
+    }
   }
 }

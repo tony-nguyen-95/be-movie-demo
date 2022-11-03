@@ -3,6 +3,7 @@ import {
   Controller,
   ForbiddenException,
   Get,
+  InternalServerErrorException,
   Logger,
   Param,
   Post,
@@ -30,17 +31,34 @@ export class CinemasController {
 
   @Get('/movies/:id')
   async getMoviesFromCinemaId(@Param('id') id: string) {
-    return await this.cinemasService.getMoviesFromCinemaId(id);
+    try {
+      return await this.cinemasService.getMoviesFromCinemaId(id);
+    } catch {
+      throw new InternalServerErrorException();
+    }
   }
 
   @Get('/movies/:id/showtime')
   async getMoviesFromCinemaIdIncludeShowtimes(@Param('id') id: string) {
-    return await this.cinemasService.getMoviesFromCinemaIdIncludeShowtime(id);
+    try {
+      return await this.cinemasService.getMoviesFromCinemaIdIncludeShowtime(id);
+    } catch {
+      throw new InternalServerErrorException();
+    }
   }
 
   @Get()
-  async getAllCinemas() {
-    return this.cinemasService.getAllCinemas();
+  @UseGuards(AuthGuard())
+  async getAllCinemas(@GetUser() user: User) {
+    try {
+      if (!this.allowedRole.includes(user.role)) {
+        throw new ForbiddenException();
+      }
+
+      return this.cinemasService.getAllCinemas();
+    } catch {
+      throw new InternalServerErrorException();
+    }
   }
 
   @Post()
@@ -49,13 +67,17 @@ export class CinemasController {
     @Body() createCinemaDto: CreateCinemaDto,
     @GetUser() user: User,
   ): Promise<Cinema> {
-    if (!this.allowedRole.includes(user.role)) {
-      throw new ForbiddenException();
-    }
+    try {
+      if (!this.allowedRole.includes(user.role)) {
+        throw new ForbiddenException();
+      }
 
-    const movies = await this.moviesService.getMoviesByIds(
-      createCinemaDto.movieIds,
-    );
-    return this.cinemasService.createCinema(createCinemaDto, movies);
+      const movies = await this.moviesService.getMoviesByIds(
+        createCinemaDto.movieIds,
+      );
+      return this.cinemasService.createCinema(createCinemaDto, movies);
+    } catch {
+      throw new InternalServerErrorException();
+    }
   }
 }

@@ -4,6 +4,7 @@ import {
   Delete,
   ForbiddenException,
   Get,
+  InternalServerErrorException,
   Logger,
   Param,
   ParseIntPipe,
@@ -35,19 +36,31 @@ export class MoviesController {
   async getMovies(
     @Query() filterDto: GetMoviesFilterDto,
   ): Promise<Array<Movie>> {
-    return this.moviesService.getMovies(filterDto);
+    try {
+      return this.moviesService.getMovies(filterDto);
+    } catch {
+      throw new InternalServerErrorException();
+    }
   }
 
   @Get('/:id')
   async getMovieById(@Param('id', ParseIntPipe) id: number): Promise<Movie> {
-    return this.moviesService.getMovieById(id);
+    try {
+      return this.moviesService.getMovieById(id);
+    } catch {
+      throw new InternalServerErrorException();
+    }
   }
 
   @Get('/cinemas/:id')
   async getCinemasFromMovieId(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<Cinema[]> {
-    return this.moviesService.getCinemasFromMovieId(id);
+    try {
+      return this.moviesService.getCinemasFromMovieId(id);
+    } catch {
+      throw new InternalServerErrorException();
+    }
   }
 
   @Post()
@@ -56,17 +69,21 @@ export class MoviesController {
     @Body() createMovieDto: CreateMovieDto,
     @GetUser() user: User,
   ): Promise<Movie> {
-    if (!this.allowedRole.includes(user.role)) {
-      throw new ForbiddenException();
+    try {
+      if (!this.allowedRole.includes(user.role)) {
+        throw new ForbiddenException();
+      }
+
+      this.logger.verbose(
+        `User "${user.username}" creating a new movie. Data: ${JSON.stringify(
+          createMovieDto,
+        )}`,
+      );
+
+      return this.moviesService.createMovie(createMovieDto);
+    } catch {
+      throw new InternalServerErrorException();
     }
-
-    this.logger.verbose(
-      `User "${user.username}" creating a new movie. Data: ${JSON.stringify(
-        createMovieDto,
-      )}`,
-    );
-
-    return this.moviesService.createMovie(createMovieDto);
   }
 
   @Delete('/:id')
@@ -75,15 +92,19 @@ export class MoviesController {
     @Param('id', ParseIntPipe) id: number,
     @GetUser() user: User,
   ): Promise<void> {
-    if (!this.allowedRole.includes(user.role)) {
-      throw new ForbiddenException();
+    try {
+      if (!this.allowedRole.includes(user.role)) {
+        throw new ForbiddenException();
+      }
+
+      this.logger.verbose(
+        `User "${user.username}" deleting a movie with ID ${id}.`,
+      );
+
+      return this.moviesService.deleteMovie(id);
+    } catch {
+      throw new InternalServerErrorException();
     }
-
-    this.logger.verbose(
-      `User "${user.username}" deleting a movie with ID ${id}.`,
-    );
-
-    return this.moviesService.deleteMovie(id);
   }
 
   @Patch('/:id')
@@ -93,10 +114,14 @@ export class MoviesController {
     @Body() updateMovieDto: UpdateMovieDto,
     @GetUser() user: User,
   ): Promise<Movie> {
-    if (!this.allowedRole.includes(user.role)) {
-      throw new ForbiddenException();
-    }
+    try {
+      if (!this.allowedRole.includes(user.role)) {
+        throw new ForbiddenException();
+      }
 
-    return this.moviesService.updateMovie(id, updateMovieDto);
+      return this.moviesService.updateMovie(id, updateMovieDto);
+    } catch {
+      throw new InternalServerErrorException();
+    }
   }
 }

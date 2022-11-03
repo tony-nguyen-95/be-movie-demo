@@ -19,7 +19,11 @@ export class SeatTicketsController {
 
   @Get('/:id')
   async getTicketById(@Param('id') id: string) {
-    return this.seatTicketService.getTicketById(id);
+    try {
+      return this.seatTicketService.getTicketById(id);
+    } catch {
+      throw new InternalServerErrorException();
+    }
   }
 
   @Patch('/booking')
