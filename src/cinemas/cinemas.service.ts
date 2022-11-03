@@ -15,6 +15,7 @@ export class CinemasService {
 
   async getAllCinemas(): Promise<Array<Cinema>> {
     const query = this.cinemaRepository.createQueryBuilder('cinema');
+
     const cinemas = query.getMany();
 
     return cinemas;
